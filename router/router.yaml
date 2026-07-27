@@ -1,0 +1,20 @@
+supergraph:
+  listen: 0.0.0.0:4000
+  introspection: true
+
+sandbox:
+  enabled: true
+
+homepage:
+  enabled: false
+
+health_check:
+  enabled: true
+  listen: 0.0.0.0:8088
+
+cors:
+  allow_any_origin: true
+
+# Basic hardening defaults; extend as needed (rate limiting, auth, etc).
+limits:
+  http_max_request_bytes: 2000000

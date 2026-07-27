@@ -1,0 +1,10 @@
+federation_version: 2
+subgraphs:
+  users:
+    routing_url: http://users-service:4001/query
+    schema:
+      subgraph_url: http://users-service:4001/query
+  todos:
+    routing_url: http://todos-service:4002/query
+    schema:
+      subgraph_url: http://todos-service:4002/query

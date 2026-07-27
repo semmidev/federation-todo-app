@@ -1,0 +1,33 @@
+schema:
+  - schema.graphqls
+
+exec:
+  filename: generated.go
+  package: main
+
+model:
+  filename: models_gen.go
+  package: main
+
+resolver:
+  layout: single-file
+  filename: resolver.go
+  package: main
+
+federation:
+  filename: federation.go
+  package: main
+  version: 2
+
+struct_tag: json
+omit_slice_element_pointers: false
+
+models:
+  ID:
+    model: github.com/99designs/gqlgen/graphql.ID
+  Time:
+    model: github.com/99designs/gqlgen/graphql.Time
+  User:
+    fields:
+      todos:
+        resolver: true

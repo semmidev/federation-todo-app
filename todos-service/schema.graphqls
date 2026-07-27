@@ -1,0 +1,48 @@
+scalar Time
+
+"""
+Todo is owned by this subgraph (todos-service).
+"""
+type Todo @key(fields: "id") {
+  id: ID!
+  title: String!
+  description: String
+  completed: Boolean!
+  userID: ID!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+"""
+User is a *foreign* entity (owned by users-service). This subgraph only
+contributes the `todos` field to it — a textbook Federation v2 entity
+extension, without touching the users table at all.
+"""
+type User @key(fields: "id") {
+  id: ID!
+  todos: [Todo!]!
+}
+
+input NewTodoInput {
+  title: String!
+  description: String
+  userID: ID!
+}
+
+input UpdateTodoInput {
+  title: String
+  description: String
+  completed: Boolean
+}
+
+type Query {
+  todo(id: ID!): Todo
+  todos(userID: ID, limit: Int = 20, offset: Int = 0): [Todo!]!
+}
+
+type Mutation {
+  createTodo(input: NewTodoInput!): Todo!
+  updateTodo(id: ID!, input: UpdateTodoInput!): Todo!
+  deleteTodo(id: ID!): Boolean!
+  toggleTodo(id: ID!): Todo!
+}

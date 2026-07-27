@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  users-service:
+    build: ./users-service
+    environment:
+      PORT: "4001"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/users_db?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/users-service", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "4001:4001"
+
+  todos-service:
+    build: ./todos-service
+    environment:
+      PORT: "4002"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/todos_db?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/todos-service", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "4002:4002"
+
+  # One-shot: composes the supergraph schema once both subgraphs are healthy.
+  composer:
+    build: ./router
+    volumes:
+      - supergraph-data:/output
+    depends_on:
+      users-service:
+        condition: service_healthy
+      todos-service:
+        condition: service_healthy
+
+  router:
+    image: ghcr.io/apollographql/router:v2.17.0
+    volumes:
+      - supergraph-data:/dist/schema:ro
+      - ./router/router.yaml:/dist/config/router.yaml:ro
+    command:
+      [
+        "--config",
+        "/dist/config/router.yaml",
+        "--supergraph",
+        "/dist/schema/supergraph.graphql",
+      ]
+    ports:
+      - "4000:4000"
+      - "8088:8088"
+    depends_on:
+      composer:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  supergraph-data:
